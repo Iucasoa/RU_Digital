@@ -1,146 +1,231 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { QrCode, Utensils, Wallet, Clock, CheckCircle2, History, MapPin, Coffee, Globe, Plus, ArrowRightLeft } from 'lucide-react';
 
-// Dados dos tópicos para mapear na tela
-const topics = [
-  { icon: '🚀', title: 'Cinemática', desc: 'Estude movimento, velocidade e aceleração de forma intuitiva.' },
-  { icon: '⚡', title: 'Eletromagnetismo', desc: 'Explore cargas, campos magnéticos e correntes elétricas.' },
-  { icon: '🌌', title: 'Física Quântica', desc: 'Mergulhe no mundo microscópico dos átomos e partículas.' },
-  { icon: '🌍', title: 'Termodinâmica', desc: 'Entenda calor, temperatura e as leis da energia.' },
-];
+interface ApiDish {
+  name: string;
+  category: string;
+  origin: string;
+}
 
-const formulas = [
-  { name: '2ª Lei de Newton', formula: 'F = m · a' },
-  { name: 'Energia Cinética', formula: 'Ec = mv² / 2' },
-  { name: 'Efeito Doppler', formula: 'f = f₀ (v ± vo) / (v ∓ vs)' },
-  { name: 'Relatividade', formula: 'E = mc²' },
-];
+export default function App() {
+  // Controle de Navegação
+  const [activeTab, setActiveTab] = useState<'acesso' | 'carteira' | 'extrato'>('acesso');
+  
+  // Estados de Acesso
+  const [ticketActive, setTicketActive] = useState<boolean>(false);
+  const [timer, setTimer] = useState<number>(30);
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  
+  // Estados da API
+  const [chefSuggestion, setChefSuggestion] = useState<ApiDish | null>(null);
+  const [loadingApi, setLoadingApi] = useState<boolean>(true);
 
-function App() {
-  const [activeFormula, setActiveFormula] = useState(0);
+  // Relógio
+  useEffect(() => {
+    const clockInterval = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(clockInterval);
+  }, []);
+
+  // Cronômetro do QR Code
+  useEffect(() => {
+    let countdown: ReturnType<typeof setInterval>;
+    if (ticketActive && timer > 0) {
+      countdown = setInterval(() => setTimer((prev) => prev - 1), 1000);
+    } else if (timer === 0) {
+      setTicketActive(false);
+      setTimer(30);
+    }
+    return () => clearInterval(countdown);
+  }, [ticketActive, timer]);
+
+  // API do Prato Internacional
+  useEffect(() => {
+    const fetchDailySuggestion = async () => {
+      try {
+        const response = await axios.get('https://www.themealdb.com/api/json/v1/1/random.php');
+        const meal = response.data.meals[0];
+        setChefSuggestion({ name: meal.strMeal, category: meal.strCategory, origin: meal.strArea });
+      } catch (error) {
+        console.error('Erro na API:', error);
+      } finally {
+        setLoadingApi(false);
+      }
+    };
+    fetchDailySuggestion();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white relative selection:bg-cyan-500 selection:text-slate-900">
-      
-      {/* Fundo com grade e orbes brilhantes */}
-      <div className="absolute inset-0 bg-grid pointer-events-none"></div>
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-cyan-500 rounded-full blur-[120px] opacity-20 pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-purple-500 rounded-full blur-[120px] opacity-20 pointer-events-none"></div>
-
-      {/* Navbar */}
-      <nav className="relative z-10 max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-2 font-bold text-2xl tracking-tight">
-          <span className="text-cyan-400">🧲</span> Fisica<span className="text-cyan-400">Lab</span>
-        </div>
-        <div className="hidden md:flex gap-8 text-sm text-slate-300 font-medium">
-          <a href="#" className="hover:text-cyan-400 transition-colors">Início</a>
-          <a href="#" className="hover:text-cyan-400 transition-colors">Conteúdos</a>
-          <a href="#" className="hover:text-cyan-400 transition-colors">Fórmulas</a>
-        </div>
-        <button className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-5 py-2 rounded-full transition-all shadow-[0_0_20px_rgba(6,182,212,0.5)]">
-          Começar Agora
-        </button>
-      </nav>
-
-      {/* Seção Hero */}
-      <section className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-24 grid lg:grid-cols-2 gap-12 items-center">
+    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans p-4 md:p-8 flex justify-center items-center">
+      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden flex flex-col h-[800px]">
         
-        {/* Texto Principal */}
-        <div>
-          <span className="inline-block bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
-            O Universo em suas mãos
-          </span>
-          <h1 className="font-display text-5xl md:text-7xl font-bold leading-[1.1] mb-6">
-            Desvende os <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">
-              Segredos da Física
-            </span>
-          </h1>
-          <p className="text-lg text-slate-400 mb-8 max-w-lg">
-            Uma plataforma interativa que transforma conceitos complexos em experiências visuais incríveis. Aprenda Física como nunca antes.
-          </p>
-          <div className="flex flex-wrap gap-4">
-            <button className="bg-white text-slate-900 font-bold px-8 py-4 rounded-full hover:bg-slate-200 transition-colors">
-              Explorar Tópicos
-            </button>
-            <button className="border border-slate-700 hover:border-cyan-400 hover:text-cyan-400 font-bold px-8 py-4 rounded-full transition-all">
-              Ver Demonstração ▶
-            </button>
-          </div>
-        </div>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-emerald-500/20 blur-[80px] pointer-events-none" />
 
-        {/* Visual Criativo (Átomo em CSS puro com Tailwind) */}
-        <div className="relative flex items-center justify-center h-[400px]">
-          <div className="relative w-64 h-64 flex items-center justify-center">
-            {/* Núcleo */}
-            <div className="absolute w-20 h-20 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-full shadow-[0_0_60px_rgba(6,182,212,0.8)] animate-float z-10 flex items-center justify-center text-4xl">
-              ⚛️
+        {/* Cabeçalho Fixo */}
+        <header className="flex justify-between items-center mb-6 relative z-10">
+          <div>
+            <h1 className="text-2xl font-bold text-white tracking-tight">RU Digital</h1>
+            <p className="text-sm text-slate-400 flex items-center gap-1 mt-1">
+              <MapPin className="w-3 h-3" /> Campus Pau dos Ferros
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-xl font-mono font-medium text-slate-200">
+              {currentTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+          </div>
+        </header>
+
+        {/* ÁREA DE RENDERIZAÇÃO CONDICIONAL */}
+        <main className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+          
+          {/* TELA 1: ACESSO & CARDÁPIO */}
+          {activeTab === 'acesso' && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <section className={`relative p-6 rounded-3xl border transition-all duration-500 mb-6 ${
+                ticketActive 
+                  ? 'bg-emerald-950/40 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]' 
+                  : 'bg-slate-950 border-slate-800'
+              }`}>
+                <div className="flex flex-col items-center justify-center text-center gap-4">
+                  <div className={`p-4 rounded-2xl transition-colors duration-500 ${ticketActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-900 text-slate-600'}`}>
+                    <QrCode className="w-16 h-16" />
+                  </div>
+                  <div>
+                    <h2 className={`text-lg font-bold ${ticketActive ? 'text-emerald-400' : 'text-slate-300'}`}>
+                      {ticketActive ? 'Acesso Liberado' : 'Gerar Confirmação'}
+                    </h2>
+                    <p className="text-sm text-slate-500 mt-1 h-5">
+                      {ticketActive ? `Catraca atualiza em ${timer}s` : 'Aproxime na catraca do refeitório'}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => { setTicketActive(true); setTimer(30); }}
+                    disabled={ticketActive}
+                    className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+                      ticketActive ? 'bg-emerald-500/20 text-emerald-400 cursor-default' : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                    }`}
+                  >
+                    {ticketActive ? <><CheckCircle2 className="w-5 h-5" /> Ticket Ativo</> : 'Confirmar Refeição'}
+                  </button>
+                </div>
+              </section>
+
+              <section className="bg-slate-950 border border-slate-800 rounded-3xl p-5 mb-4">
+                <div className="flex items-center justify-between mb-4 border-b border-slate-800/80 pb-3">
+                  <h3 className="font-bold text-slate-200 flex items-center gap-2">
+                    <Utensils className="w-4 h-4 text-orange-400" /> Cardápio Base
+                  </h3>
+                </div>
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <p className="text-xs text-slate-500 font-mono mb-1">Prato Principal</p>
+                    <p className="text-slate-300 font-medium">Iscas de Frango Grelhado</p>
+                  </div>
+                  <div className="flex items-start gap-2 bg-slate-900 p-3 rounded-xl border border-slate-800/50 mt-2">
+                    <Coffee className="w-4 h-4 text-yellow-500 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs text-slate-500 font-mono mb-0.5">Sobremesa</p>
+                      <p className="text-slate-300 text-xs font-medium">Pão com Doce de Leite e Banana</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="bg-indigo-950/30 border border-indigo-900/50 rounded-3xl p-5 mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Globe className="w-4 h-4 text-indigo-400" />
+                  <h3 className="font-bold text-indigo-300 text-sm">Sugestão Externa (API)</h3>
+                </div>
+                {!loadingApi && chefSuggestion && (
+                  <div>
+                    <p className="text-slate-200 font-medium text-sm">{chefSuggestion.name}</p>
+                    <p className="text-xs text-indigo-400 mt-1">{chefSuggestion.origin} • {chefSuggestion.category}</p>
+                  </div>
+                )}
+              </section>
             </div>
-            
-            {/* Anéis orbitais */}
-            <div className="absolute inset-0 border border-cyan-500/40 rounded-full animate-spin-slow" style={{ transform: 'rotateX(60deg) rotateZ(45deg)' }}></div>
-            <div className="absolute inset-8 border border-purple-500/40 rounded-full animate-spin-slow" style={{ transform: 'rotateX(60deg) rotateZ(-45deg)', animationDirection: 'reverse' }}></div>
-            
-            {/* Elétrons */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-cyan-400 rounded-full shadow-[0_0_20px_cyan] animate-pulse"></div>
-            <div className="absolute bottom-4 left-10 w-3 h-3 bg-purple-400 rounded-full shadow-[0_0_20px_purple] animate-pulse"></div>
-            <div className="absolute top-1/2 right-0 w-3 h-3 bg-white rounded-full shadow-[0_0_20px_white] animate-pulse"></div>
-          </div>
-        </div>
-      </section>
+          )}
 
-      {/* Seção de Tópicos */}
-      <section className="relative z-10 max-w-7xl mx-auto px-6 pb-24">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-          Domine os <span className="text-cyan-400">Fundamentos</span>
-        </h2>
+          {/* TELA 2: CARTEIRA */}
+          {activeTab === 'carteira' && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-300 flex flex-col gap-4 h-full">
+              <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10 text-indigo-500">
+                  <Wallet className="w-24 h-24" />
+                </div>
+                <p className="text-slate-400 text-sm font-mono mb-1">Saldo SIGAA</p>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <h2 className="text-5xl font-bold text-white">14</h2>
+                  <span className="text-slate-400">refeições</span>
+                </div>
+                
+                <button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors">
+                  <Plus className="w-5 h-5" /> Adicionar Saldo (PIX)
+                </button>
+              </div>
+
+              <div className="bg-slate-950 border border-slate-800 rounded-3xl p-5 flex-1">
+                <h3 className="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+                  <ArrowRightLeft className="w-4 h-4" /> Movimentações Recentes
+                </h3>
+                <div className="space-y-4">
+                  {[
+                    { tipo: 'Consumo', local: 'Almoço', valor: '-1', data: 'Hoje, 12:30' },
+                    { tipo: 'Recarga', local: 'PIX Institucional', valor: '+10', data: 'Ontem, 09:15', isAdd: true },
+                    { tipo: 'Consumo', local: 'Jantar', valor: '-1', data: 'Terça, 18:45' }
+                  ].map((mov, i) => (
+                    <div key={i} className="flex justify-between items-center border-b border-slate-800/50 pb-3 last:border-0">
+                      <div>
+                        <p className="text-sm font-medium text-slate-200">{mov.tipo} • {mov.local}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{mov.data}</p>
+                      </div>
+                      <span className={`font-mono font-bold ${mov.isAdd ? 'text-emerald-400' : 'text-slate-400'}`}>
+                        {mov.valor}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TELA 3: EXTRATO (Placeholder) */}
+          {activeTab === 'extrato' && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-300 flex flex-col items-center justify-center h-full text-center text-slate-500">
+              <History className="w-12 h-12 mb-4 opacity-50" />
+              <p>Histórico completo de refeições</p>
+              <p className="text-xs mt-2">Sincronizando com o banco de dados...</p>
+            </div>
+          )}
+
+        </main>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {topics.map((topic, index) => (
-            <div key={index} className="group bg-slate-900/50 backdrop-blur-sm border border-slate-800 hover:border-cyan-500/50 rounded-2xl p-6 transition-all hover:-translate-y-2 hover:shadow-[0_10px_40px_-10px_rgba(6,182,212,0.3)]">
-              <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">{topic.icon}</div>
-              <h3 className="text-xl font-bold mb-2">{topic.title}</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">{topic.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Seção de Fórmulas Interativas */}
-      <section className="relative z-10 max-w-5xl mx-auto px-6 pb-24">
-        <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-10 md:p-16 text-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl"></div>
-          
-          <h2 className="text-3xl font-bold mb-4">Fórmulas que Movem o Mundo</h2>
-          <p className="text-slate-400 mb-10">Clique nas equações abaixo para explorar.</p>
-          
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-            {formulas.map((f, index) => (
-              <button 
-                key={index} 
-                onClick={() => setActiveFormula(index)}
-                className={`px-6 py-3 rounded-full font-mono text-sm transition-all border ${
-                  activeFormula === index 
-                  ? 'bg-cyan-500 text-slate-950 border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.5)]' 
-                  : 'border-slate-700 text-slate-400 hover:border-cyan-500 hover:text-cyan-400'
-                }`}
-              >
-                {f.name}
-              </button>
-            ))}
-          </div>
-
-          <div className="text-5xl md:text-7xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-white to-cyan-300 animate-pulse">
-            {formulas[activeFormula].formula}
-          </div>
-        </div>
-      </section>
-
-      {/* Rodapé */}
-      <footer className="relative z-10 border-t border-slate-800 py-8 text-center text-slate-500 text-sm">
-        © 2026 FisicaLab. Construído com React, TypeScript e Tailwind CSS v4.
-      </footer>
+        {/* BARRA DE NAVEGAÇÃO FUNCIONAL */}
+        <nav className="mt-4 flex justify-around items-center pt-4 border-t border-slate-800/80">
+          <button 
+            onClick={() => setActiveTab('acesso')}
+            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'acesso' ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
+          >
+            <QrCode className="w-6 h-6" />
+            <span className="text-[10px] font-medium">Acesso</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('carteira')}
+            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'carteira' ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
+          >
+            <Wallet className="w-6 h-6" />
+            <span className="text-[10px] font-medium">Carteira</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('extrato')}
+            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'extrato' ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}
+          >
+            <History className="w-6 h-6" />
+            <span className="text-[10px] font-medium">Extrato</span>
+          </button>
+        </nav>
+      </div>
     </div>
   );
 }
-
-export default App;
