@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { QrCode, Utensils, Wallet, Clock, CheckCircle2, History, MapPin, Coffee, Globe, Plus, ArrowRightLeft } from 'lucide-react';
+import { QrCode, Utensils, Wallet, CheckCircle2, History, MapPin, Coffee, Globe, Plus, ArrowRightLeft } from 'lucide-react';
 
 interface ApiDish {
   name: string;
