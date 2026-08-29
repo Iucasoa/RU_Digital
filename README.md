@@ -13,6 +13,19 @@ O RU Digital é uma solução completa que moderniza a experiência dos usuário
 - 🔐 Autenticação segura de usuários
 - 📱 Interface responsiva e intuitiva
 
+## Capturas de Tela
+
+Prints do desenvolvimento e da implantação do RU Digital:
+
+![Tela de acesso do RU Digital com o DevTools exibindo a chamada à API externa de sugestão de prato](docs/screenshots/app-interface-api.png)
+*Tela de acesso e cardápio, com a integração à API externa (TheMealDB) usada na sugestão do dia.*
+
+![Deploy da aplicação na AWS Amplify](docs/screenshots/deploy-amplify.png)
+*Publicação da branch `staging` via AWS Amplify Hosting.*
+
+![Depuração da aplicação com o console do navegador aberto](docs/screenshots/app-interface-console.png)
+*Testes e depuração da interface durante o desenvolvimento.*
+
 ## Stack Tecnológico
 
 - **Frontend**: React 18+ com TypeScript
